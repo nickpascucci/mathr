@@ -34,31 +34,34 @@
     / "/"
     "Unknown symbol"))
 
-(defn pick-first [operation]
-  (let [val (rand-int 10)]
-   (if (and (= / operation) 
-            (or (= 0 val) (= 5 val) (= 7 val))) 
-    (+ 1 val)
-    val)))
+(defn pick-first! [operation]
+  "Pick the first value."
+  (rand-int 10))
 
-(defn random-divisor [numerator]
+(defn random-divisor! [numerator]
+  "Pick a safe random value for a denominator. That means it can't be 0 and should divide the
+numerator into an integer. It may wind up picking numerator if there are no other options, and the
+execution time is theoretically unbounded since we're just doing random jumps. That said, this
+usually executes pretty fast."
   (let [candidate (atom (rand-int (+ 1 numerator)))]
     (while (or (= 0 @candidate) 
                (not (integer? (/ numerator @candidate))))
       (swap! candidate (fn [_] (rand-int (+ 1 numerator)))))
     @candidate))
 
-(defn pick-second [operation first-val]
+(defn pick-second! [operation first-val]
+  "Pick the second value based on the first one. This uses random-divisor! to pick values that will
+work when the operation is division."
   (if (= '/ operation)
-    (random-divisor first-val)
+    (random-divisor! first-val)
     (rand-int 11)))
 
 (defn generate-question []
   "Generate a new question including values and operation."
   (let [operation (pick-randomly! ['+ '- '* '/])
         symbol (op-to-sym operation)
-        first-val (pick-first operation)
-        second-val (pick-second operation first-val)]
+        first-val (pick-first! operation)
+        second-val (pick-second! operation first-val)]
     ;; TODO Make it so that the division always has an integer answer and that we never divide by 0.
    {:operation @(resolve operation) :symbol symbol :first-val first-val :second-val second-val}))
 
