@@ -5,10 +5,11 @@
 
 ;; Help text shown at the beginning of the program execution.
 (def intro-text
-  (str "Welcome to Mathr! This program is designed to test your ability to do mental calculation.\n"
-       "We'll present you with a series of problems. Enter the answer as quickly as you can.\n"
-       "At the end, your total time, average time, and the percent of correct answers will be shown.\n"
-       "When you're ready, press Enter to begin."))
+  (str
+   "Welcome to Mathr! This program is designed to test your ability to do mental calculation.\n"
+   "We'll present you with a series of problems. Enter the answer as quickly as you can.\n"
+   "At the end, your total time, average time, and the percent of correct answers will be shown.\n"
+   "When you're ready, press Enter to begin."))
 
 (defn do-intro []
   "Display the intro text and wait for the user to press Enter."
@@ -24,16 +25,6 @@
   "Pick a random element from choices."
   (nth choices (rand-int (count choices))))
 
-(defn op-to-sym [operation]
-  "Convert a math operation to the human-friendly symbol."
-  ;; TODO Make this print the readable form. There has to be a way, right?
-  (case operation
-    + "+"
-    - "-"
-    * "x"
-    / "/"
-    "Unknown symbol"))
-
 (defn pick-first! [operation]
   "Pick the first value."
   (rand-int 10))
@@ -44,7 +35,7 @@ numerator into an integer. It may wind up picking numerator if there are no othe
 execution time is theoretically unbounded since we're just doing random jumps. That said, this
 usually executes pretty fast."
   (let [candidate (atom (rand-int (+ 1 numerator)))]
-    (while (or (= 0 @candidate) 
+    (while (or (= 0 @candidate)
                (not (integer? (/ numerator @candidate))))
       (swap! candidate (fn [_] (rand-int (+ 1 numerator)))))
     @candidate))
@@ -59,11 +50,13 @@ work when the operation is division."
 (defn generate-question []
   "Generate a new question including values and operation."
   (let [operation (pick-randomly! ['+ '- '* '/])
-        symbol (op-to-sym operation)
         first-val (pick-first! operation)
         second-val (pick-second! operation first-val)]
     ;; TODO Make it so that the division always has an integer answer and that we never divide by 0.
-   {:operation @(resolve operation) :symbol symbol :first-val first-val :second-val second-val}))
+    {:operation @(resolve operation)
+     :op-name (name operation)
+     :first-val first-val
+     :second-val second-val}))
 
 (defn read-int []
   "Read an int from stdin and prompt the user if the input doesn't parse."
@@ -77,10 +70,9 @@ work when the operation is division."
 
 (defn ask-question [question]
   "Ask a question and return whether the answer was correct."
-  (let [{:keys [operation symbol first-val second-val]} question
+  (let [{:keys [operation op-name first-val second-val]} question
         answer (operation first-val second-val)]
-    (println (str "\t" first-val " " symbol " " second-val " = ?"))
-    ;; TODO Make input more robust - empty string crashes this.
+    (println (str "\t" first-val " " op-name " " second-val " = ?"))
     (= answer (read-int))))
 
 (defn run-questions! []
